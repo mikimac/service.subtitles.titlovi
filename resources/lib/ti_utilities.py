@@ -159,6 +159,8 @@ class OSDBServer:
                     link = ""
                     format = "srt"
 
+                    tv_info = self.get_tvshow_info(subtitle)
+
                     if subtitle.getElementsByTagName("safeTitle")[0].firstChild:
                         movie = subtitle.getElementsByTagName("safeTitle")[0] \
                             .firstChild.data
@@ -168,14 +170,38 @@ class OSDBServer:
                     if subtitle.getElementsByTagName("release")[0].firstChild:
                         filename = subtitle.getElementsByTagName("release")[0] \
                             .firstChild.data
-                        filename = "%s (%s) %s.srt" % (movie, movie_year, filename,)
+                        if tv_info:
+                            if tv_info['episode']:
+                                filename = "%s (%s) S%.2dE%.2d %s.srt" % (movie,
+                                                               movie_year,
+                                                               int(tv_info['season']),
+                                                               int(tv_info['episode']),
+                                                               filename,)
+                            else:
+                                filename = "%s (%s) S%.2d Pack %s.srt" % (movie,
+                                                               movie_year,
+                                                               int(tv_info['season']),
+                                                               filename,)
+                        else:
+                            filename = "%s (%s) %s.srt" % (movie, movie_year, filename,)
                         if len(filename) < 2:
                             filename = "%s (%s).srt" % (movie, movie_year,)
                     else:
-                        filename = "%s (%s).srt" % (movie, movie_year,)
+                        if tv_info:
+                            if tv_info['episode']:
+                                filename = "%s (%s) S%.2dE%.2d %s.srt" % (movie,
+                                                               movie_year,
+                                                               int(tv_info['season']),
+                                                               int(tv_info['episode']),)
+                            else:
+                                filename = "%s (%s) S%.2d Pack %s.srt" % (movie,
+                                                               movie_year,
+                                                               int(tv_info['season']),)
+                        else:
+                            filename = "%s (%s).srt" % (movie, movie_year,)
                     if subtitle.getElementsByTagName("score")[0].firstChild:
-                        rating = int(subtitle.getElementsByTagName("score")[0]
-                                     .firstChild.data)
+                        rating = int(float(subtitle.getElementsByTagName("score")[0]
+                                     .firstChild.data))
                     if subtitle.getElementsByTagName("language")[0].firstChild:
                         lang = subtitle.getElementsByTagName("language")[0] \
                             .firstChild.data
@@ -205,19 +231,21 @@ class OSDBServer:
                                                 })
                     # log(__name__, "link: %s" % link)
                     # log(__name__, "movie: %s" % movie)
-                    log(__name__, "rating: %s" % rating)
+                    # log(__name__, "rating: %s" % rating)
                 return subtitles_list
         except:
             return subtitles_list
 
     def get_tvshow_info(self, subtitle):
-        if subtitle.getElementsByTagName("TVShow"):
+        if(len(subtitle.getElementsByTagName('TVShow'))!=0):
             tvinfo = {}
             tvinfo['season'] = subtitle.getElementsByTagName("season")[0] \
                 .firstChild.data
-            if subtitle.getElementsByTagName("episode")[0].firstChild:
+            if(len(subtitle.getElementsByTagName('episode'))!=0):
                 tvinfo['episode'] = subtitle.getElementsByTagName("episode")[0] \
                     .firstChild.data
+            else:
+                tvinfo['episode'] = None
         else:
             tvinfo = False
         return tvinfo
