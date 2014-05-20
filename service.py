@@ -34,6 +34,8 @@ sys.path.append(__resource__)
 
 from ti_utilities import OSDBServer, log, normalizeString, languageTranslate
 
+from lat2cyr import Lat2Cyr
+
 
 def Search(item):
     osdb_server = OSDBServer()
@@ -62,9 +64,10 @@ def Search(item):
             listitem.setProperty("hearing_imp", ("false", "true")
                                  [it.get("hearing_imp", False)])
 
-            url = "plugin://%s/?action=download&ID=%s&filename=%s" % (__scriptid__,
+            url = "plugin://%s/?action=download&ID=%s&filename=%s&language_name=%s" % (__scriptid__,
                                             it["ID"],
-                                            it["filename"]
+                                            it["filename"],
+                                            it["language_name"]
                                             )
 
             xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),
@@ -73,7 +76,7 @@ def Search(item):
                                         isFolder=False)
 
 
-def Download(url, filename):
+def Download(url, filename, language_name=None):
     if xbmcvfs.exists(__temp__):
         shutil.rmtree(__temp__)
     xbmcvfs.mkdirs(__temp__)
@@ -88,6 +91,8 @@ def Download(url, filename):
         files.sort()
         index = 1
 
+        log(__name__, "files: %s" % files)
+
         for file in files:
             contents = archive.read(file)
             extension = file[file.rfind('.') + 1:]
@@ -99,9 +104,15 @@ def Download(url, filename):
                 dest = os.path.join(__temp__, "%s.%d.%s" %
                                     (str(uuid.uuid4()), index, extension))
 
+            log(__name__, 'dest: %s' % dest)
             f = open(dest, 'wb')
             f.write(contents)
             f.close()
+            if language_name == 'Serbian' and __addon__.getSetting("autocyrillic") == "true":
+                lat2cyr = Lat2Cyr()
+                subCyr = lat2cyr.convert2cyrillic(dest)
+                log(__name__, 'Cyrillic sub: %s' % subCyr)
+                subtitle_list.append(subCyr)
             subtitle_list.append(dest)
 
             index += 1
@@ -208,7 +219,14 @@ elif params['action'] == 'download':
     url_base = "http://en.titlovi.com/downloads/default.ashx?type=1&mediaid=%s"
     url = url_base % params["ID"]
     log(__name__, 'link: %s' % url)
-    subs = Download(url, params["filename"])
+    # Serbian
+    language_name = params["language_name"]
+
+    if language_name == 'Serbian':
+        subs = Download(url, params["filename"], language_name)
+    else:
+        subs = Download(url, params["filename"])
+
     for sub in subs:
         listitem = xbmcgui.ListItem(label=sub)
         xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),

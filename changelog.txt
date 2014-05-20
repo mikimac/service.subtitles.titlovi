@@ -14,3 +14,7 @@ Fixed tvshow display format like following example:
 1.0.4
 Eliminate duplicate subtitles and add supported languages
 Check if searched language is supported by site.
+
+1.0.5
+Add options for automatic conversion from latin to cyrillic letters for serbian
+Conversion is done with script.module.lat2cyr
