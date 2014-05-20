@@ -1,0 +1,8 @@
+1.0.0
+Initial release for XBMC 13.0 Gotham.
+
+1.0.1
+Fixed bug showing correct number of results
+
+1.0.2
+Add manual search and shows raiting stars corectly

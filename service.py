@@ -10,6 +10,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcplugin
 import shutil
+import re
 from zipfile import ZipFile
 from cStringIO import StringIO
 import uuid
@@ -36,12 +37,12 @@ from ti_utilities import OSDBServer, log, normalizeString, languageTranslate
 
 def Search(item):
     osdb_server = OSDBServer()
-    osdb_server.create()
     subtitles_list = []
 
     if not subtitles_list:
-        log(__name__, "Search for [%s] by name" %
-            (os.path.basename(item['file_original_path']),))
+        # log(__name__, "Search for [%s] by name" %
+        #     (os.path.basename(item['file_original_path']),))
+        log(__name__, "Search for [%s] by name" % item['title'])
         subtitles_list = osdb_server.search_subtitles(item['title'],
                                                       item['tvshow'],
                                                       item['season'],
@@ -146,7 +147,7 @@ def get_params(string=""):
 
 params = get_params()
 
-if params['action'] == 'search' or params['action'] == 'manualsearch':
+if params['action'] == 'search':
     log(__name__, "action 'search' called")
     item = {}
     item['temp'] = False
@@ -160,41 +161,38 @@ if params['action'] == 'search' or params['action'] == 'manualsearch':
         item['mansearch'] = True
         item['mansearchstr'] = params['searchstring']
 
-    if item['mansearch']:
-        item['title'] = item['mansearchstr']
-    else:
-        # Show
-        item['tvshow'] = normalizeString(
-            xbmc.getInfoLabel("VideoPlayer.TVshowtitle"))
-        # try to get original title
+    # Show
+    item['tvshow'] = normalizeString(
+        xbmc.getInfoLabel("VideoPlayer.TVshowtitle"))
+    # try to get original title
+    item['title'] = normalizeString(
+        xbmc.getInfoLabel("VideoPlayer.OriginalTitle"))
+
+    # Full path of a playing file
+    item['file_original_path'] = urllib.unquote(
+        xbmc.Player().getPlayingFile().decode('utf-8'))
+
+    if item['title'] == "":
+        log(__name__, "VideoPlayer.OriginalTitle not found")
+         # no original title, get just Title
         item['title'] = normalizeString(
-            xbmc.getInfoLabel("VideoPlayer.OriginalTitle"))
+            xbmc.getInfoLabel("VideoPlayer.Title"))
 
-        # Full path of a playing file
-        item['file_original_path'] = urllib.unquote(
-            xbmc.Player().getPlayingFile().decode('utf-8'))
+    # Check if season is "Special"
+    if item['episode'].lower().find("s") > -1:
+        item['season'] = "0"
+        item['episode'] = item['episode'][-1:]
 
-        if item['title'] == "":
-            log(__name__, "VideoPlayer.OriginalTitle not found")
-             # no original title, get just Title
-            item['title'] = normalizeString(
-                xbmc.getInfoLabel("VideoPlayer.Title"))
+    if (item['file_original_path'].find("http") > -1):
+        item['temp'] = True
 
-        # Check if season is "Special"
-        if item['episode'].lower().find("s") > -1:
-            item['season'] = "0"
-            item['episode'] = item['episode'][-1:]
+    elif (item['file_original_path'].find("rar://") > -1):
+        item['rar'] = True
+        item['file_original_path'] = os.path.dirname(item['file_original_path'][6:])
 
-        if (item['file_original_path'].find("http") > -1):
-            item['temp'] = True
-
-        elif (item['file_original_path'].find("rar://") > -1):
-            item['rar'] = True
-            item['file_original_path'] = os.path.dirname(item['file_original_path'][6:])
-
-        elif (item['file_original_path'].find("stack://") > -1):
-            stackPath = item['file_original_path'].split(" , ")
-            item['file_original_path'] = stackPath[0][8:]
+    elif (item['file_original_path'].find("stack://") > -1):
+        stackPath = item['file_original_path'].split(" , ")
+        item['file_original_path'] = stackPath[0][8:]
 
     #['scc','eng']
     item['3let_language'] = []
@@ -219,11 +217,43 @@ elif params['action'] == 'download':
                                     isFolder=False)
 
 
-# elif params['action'] == 'manualsearch':
-#     xbmc.executebuiltin(u'Notification(%s,%s,2000,%s)' %
-#                         (__scriptname__,
-#                         __language__(32004),
-#                         os.path.join(__cwd__, "icon.png")
-#                          ))
+elif params['action'] == 'manualsearch':
+    log(__name__, "action 'manualsearch' called")
+    item = {}
+
+    if 'searchstring' in params:
+        item['mansearch'] = True
+        item['title'] = normalizeString(params['searchstring'])
+
+    item['title'] = item['title'].replace('%20', ' ')
+
+    # Search for year in this format (2010)
+    find_year = re.findall('\((\d{4})\)', item['title'])
+    if find_year:
+        # if found year remove year from title
+        item['title'] = item['title'].replace(' (' + find_year[0] + ')', '')
+        item['year'] = find_year[0]
+    else:
+        item['year'] = ''
+
+    log(__name__, 'Naslov: %s' % item['title'])
+
+    item['temp'] = False
+    item['rar'] = False
+    item['mansearch'] = False
+    item['tvshow'] = []
+    item['season'] = 0
+    item['episode'] = 0
+    item['3let_language'] = []  # ['scc','eng']
+
+    for lang in urllib.unquote(params['languages']).decode('utf-8').split(","):
+        item['3let_language'].append(languageTranslate(lang, 0, 2))
+
+    Search(item)
+    # xbmc.executebuiltin(u'Notification(%s,%s,2000,%s)' %
+    #                     (__scriptname__,
+    #                     __language__(32004),
+    #                     os.path.join(__cwd__, "icon.png")
+    #                      ))
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

@@ -108,13 +108,10 @@ class OSDBServer:
 
     KEY = "UGE4Qk0tYXNSMWEtYTJlaWZfUE9US1NFRC1WRUQtWA=="
 
-    def create(self):
-        self.subtitles_list = []
-
     def search_subtitles(self, name, tvshow, season, episode, lang, year):
         if len(tvshow) > 1:
             name = tvshow
-        search_url = []
+        subtitles_list = []
         api_key = base64.b64decode(self.KEY)[::-1]
         if len(tvshow) > 0:
             search_string = ("%s S%.2dE%.2d" % (name,
@@ -150,6 +147,7 @@ class OSDBServer:
         try:
             if subtitles:
                 url_base = "http://en.titlovi.com/downloads/default.ashx?type=1&mediaid=%s"
+                log(__name__, "Found subs: %s" % len(subtitles))
                 for subtitle in subtitles:
                     subtitle_id = 0
                     rating = 0
@@ -160,6 +158,7 @@ class OSDBServer:
                     flag_image = ""
                     link = ""
                     format = "srt"
+
                     if subtitle.getElementsByTagName("safeTitle")[0].firstChild:
                         movie = subtitle.getElementsByTagName("safeTitle")[0] \
                             .firstChild.data
@@ -176,7 +175,7 @@ class OSDBServer:
                         filename = "%s (%s).srt" % (movie, movie_year,)
                     if subtitle.getElementsByTagName("score")[0].firstChild:
                         rating = int(subtitle.getElementsByTagName("score")[0]
-                                     .firstChild.data)*2
+                                     .firstChild.data)
                     if subtitle.getElementsByTagName("language")[0].firstChild:
                         lang = subtitle.getElementsByTagName("language")[0] \
                             .firstChild.data
@@ -192,7 +191,7 @@ class OSDBServer:
                     subtitle_id = subtitle_id.split("-")[-1].replace("/", "")
                     flag_image = lang_name
                     link = url_base % subtitle_id
-                    self.subtitles_list.append({'filename': filename,
+                    subtitles_list.append({'filename': filename,
                                                 'link': link,
                                                 'language_name': languageTranslate((lang_name),2,0),
                                                 'language_id': lang_id,
@@ -204,9 +203,24 @@ class OSDBServer:
                                                 'sync': False,
                                                 'hearing_imp': False
                                                 })
-                return self.subtitles_list
+                    # log(__name__, "link: %s" % link)
+                    # log(__name__, "movie: %s" % movie)
+                    log(__name__, "rating: %s" % rating)
+                return subtitles_list
         except:
-            return self.subtitles_list
+            return subtitles_list
+
+    def get_tvshow_info(self, subtitle):
+        if subtitle.getElementsByTagName("TVShow"):
+            tvinfo = {}
+            tvinfo['season'] = subtitle.getElementsByTagName("season")[0] \
+                .firstChild.data
+            if subtitle.getElementsByTagName("episode")[0].firstChild:
+                tvinfo['episode'] = subtitle.getElementsByTagName("episode")[0] \
+                    .firstChild.data
+        else:
+            tvinfo = False
+        return tvinfo
 
     def fetch(self, url):
         socket = urllib.urlopen(url)
