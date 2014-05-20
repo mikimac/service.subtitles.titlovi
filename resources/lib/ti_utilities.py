@@ -171,32 +171,19 @@ class OSDBServer:
                         filename = subtitle.getElementsByTagName("release")[0] \
                             .firstChild.data
                         if tv_info:
-                            if tv_info['episode']:
-                                filename = "%s (%s) S%.2dE%.2d %s.srt" % (movie,
-                                                               movie_year,
-                                                               int(tv_info['season']),
-                                                               int(tv_info['episode']),
-                                                               filename,)
-                            else:
-                                filename = "%s (%s) S%.2d Pack %s.srt" % (movie,
-                                                               movie_year,
-                                                               int(tv_info['season']),
-                                                               filename,)
+                            filename = "%s (%s) %s %s.srt" % (movie,
+                                                           movie_year,
+                                                           tv_info,
+                                                           filename,)
                         else:
                             filename = "%s (%s) %s.srt" % (movie, movie_year, filename,)
                         if len(filename) < 2:
                             filename = "%s (%s).srt" % (movie, movie_year,)
                     else:
                         if tv_info:
-                            if tv_info['episode']:
-                                filename = "%s (%s) S%.2dE%.2d %s.srt" % (movie,
-                                                               movie_year,
-                                                               int(tv_info['season']),
-                                                               int(tv_info['episode']),)
-                            else:
-                                filename = "%s (%s) S%.2d Pack %s.srt" % (movie,
-                                                               movie_year,
-                                                               int(tv_info['season']),)
+                            filename = "%s (%s) %s %s.srt" % (movie,
+                                                           movie_year,
+                                                           tv_info,)
                         else:
                             filename = "%s (%s).srt" % (movie, movie_year,)
                     if subtitle.getElementsByTagName("score")[0].firstChild:
@@ -238,16 +225,17 @@ class OSDBServer:
 
     def get_tvshow_info(self, subtitle):
         if(len(subtitle.getElementsByTagName('TVShow'))!=0):
-            tvinfo = {}
-            tvinfo['season'] = subtitle.getElementsByTagName("season")[0] \
+            season = subtitle.getElementsByTagName("season")[0] \
                 .firstChild.data
+            tvinfo = 'S%.2d' % int(season)
             if(len(subtitle.getElementsByTagName('episode'))!=0):
-                tvinfo['episode'] = subtitle.getElementsByTagName("episode")[0] \
+                episode = subtitle.getElementsByTagName("episode")[0] \
                     .firstChild.data
+                tvinfo = '%sE%.2d' % (tvinfo, int(episode))
             else:
-                tvinfo['episode'] = None
+                tvinfo = '%s Pack' % tvinfo
         else:
-            tvinfo = False
+            tvinfo = None
         return tvinfo
 
     def fetch(self, url):
