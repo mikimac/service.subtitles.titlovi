@@ -9,4 +9,4 @@ https://github.com/mikimac/script.module.lat2cyr
 
 Options:
 
-For serbian language if you have selected options automatic conversion from latin to cyrillic letters for serbian it will convert downloaded subtitle to utf8 cyrillic characters.
+For serbian language if you have selected options automatic conversion it will convert downloaded subtitle to utf8 cyrillic characters.
