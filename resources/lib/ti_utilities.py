@@ -122,6 +122,7 @@ class OSDBServer:
                         filename = subtitle.getElementsByTagName("release")[0] \
                             .firstChild.data
                         if tv_info:
+                            log(__name__, 'Found tv show: %s' % tv_info)
                             filename = "%s (%s) %s %s.srt" % (movie,
                                                            movie_year,
                                                            tv_info,
@@ -131,8 +132,9 @@ class OSDBServer:
                         if len(filename) < 2:
                             filename = "%s (%s).srt" % (movie, movie_year,)
                     else:
+                        log(__name__, 'Filename not exist')
                         if tv_info:
-                            filename = "%s (%s) %s %s.srt" % (movie,
+                            filename = "%s (%s) %s.srt" % (movie,
                                                            movie_year,
                                                            tv_info,)
                         else:
