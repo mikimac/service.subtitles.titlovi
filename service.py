@@ -76,6 +76,21 @@ def Search(item):
                                         isFolder=False)
 
 
+def old_extractor(temp_archive, subtitle_list = []):
+    exts = [".srt", ".sub", ".txt", ".smi", ".ssa", ".ass"]
+    zip_exts = [".zip", ".rar"]
+    for subfile in xbmcvfs.listdir(temp_archive)[1]:
+            file = os.path.join(__temp__, subfile.decode('utf-8'))
+            log(__name__, 'archive names: %s' % file)
+            if (os.path.splitext(file)[1] in exts):
+                subtitle_list.append(file)
+            elif (os.path.splitext(file)[1] in zip_exts):
+                log(__name__, 'Found archive file %s' % file)
+                xbmc.executebuiltin(('XBMC.Extract("%s","%s")' % (file, __temp__,))
+                    .encode('utf-8'), True)
+                old_extractor(file, subtitle_list)
+    return subtitle_list
+
 def Download(url, filename, language_name=None):
     if xbmcvfs.exists(__temp__):
         shutil.rmtree(__temp__)
@@ -87,6 +102,7 @@ def Download(url, filename, language_name=None):
         response = urllib2.urlopen(url)
         raw = response.read()
         archive = ZipFile(StringIO(raw), 'r')
+        log(__name__, "archive: %s" % archive)
         files = archive.namelist()
         files.sort()
         index = 1
@@ -118,19 +134,32 @@ def Download(url, filename, language_name=None):
             index += 1
     except:
         log(__name__, "Download using 'old' method")
-        exts = [".srt", ".sub", ".txt", ".smi", ".ssa", ".ass"]
-        zip = os.path.join(__temp__, "PN.zip")
-        f = urllib.urlopen(url)
-        with open(zip, "wb") as subFile:
-            subFile.write(f.read())
+        # exts = [".srt", ".sub", ".txt", ".smi", ".ssa", ".ass"]
+        response = urllib2.urlopen(url)
+        temp_filename = response.info()['Content-Disposition']
+        pos = temp_filename.find('filename=')
+        temp_filename = temp_filename[pos+9:]
+        content = response.read()
+        response.close()
+        # zip = os.path.join(__temp__, "titlovi.zip")
+        temp_file = os.path.join(__temp__, temp_filename)
+        log(__name__, "Downloaded as: %s" % temp_file)
+
+        with open(temp_file, "wb") as subFile:
+            subFile.write(content)
         subFile.close()
         xbmc.sleep(500)
-        xbmc.executebuiltin(('XBMC.Extract("%s","%s")' % (zip, __temp__,))
+        xbmc.executebuiltin(('XBMC.Extract("%s","%s")' % (temp_file, __temp__,))
             .encode('utf-8'), True)
-        for subfile in xbmcvfs.listdir(zip)[1]:
-            file = os.path.join(__temp__, subfile.decode('utf-8'))
-            if (os.path.splitext(file)[1] in exts):
-                subtitle_list.append(file)
+
+        subtitle_list = old_extractor(temp_file)
+        log(__name__, 'Number of subs: %s' % len(subtitle_list))
+
+        # for subfile in xbmcvfs.listdir(temp_file)[1]:
+        #     file = os.path.join(__temp__, subfile.decode('utf-8'))
+        #     log(__name__, 'archive names: %s' % file)
+        #     if (os.path.splitext(file)[1] in exts):
+        #         subtitle_list.append(file)
 
     return subtitle_list
 
@@ -189,6 +218,21 @@ if params['action'] == 'search':
         item['title'] = normalizeString(
             xbmc.getInfoLabel("VideoPlayer.Title"))
 
+    # if (item['title'].find('[B]')):
+    item['title'] = item['title'].replace('[B]', '')
+    item['title'] = item['title'].replace('[/B]', '')
+    item['title'] = item['title'].replace('  ', ' ')
+
+    find_year = re.findall('\((\d{4})\)', item['title'])
+    if find_year:
+        # if found year remove year from title
+        item['title'] = item['title'].replace(' (' + find_year[0] + ')', '')
+        if not item['year']:
+            item['year'] = find_year[0]
+    else:
+        if not item['year']:
+            item['year'] = ''
+
     # Check if season is "Special"
     if item['episode'].lower().find("s") > -1:
         item['season'] = "0"
@@ -243,7 +287,8 @@ elif params['action'] == 'manualsearch':
         item['mansearch'] = True
         item['title'] = normalizeString(params['searchstring'])
 
-    item['title'] = item['title'].replace('%20', ' ')
+    # item['title'] = item['title'].replace('%20', ' ')
+    item['title'] = unquoted = urllib.unquote(item['title'])
 
     # Search for year in this format (2010)
     find_year = re.findall('\((\d{4})\)', item['title'])
