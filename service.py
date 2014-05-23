@@ -37,6 +37,22 @@ from ti_utilities import OSDBServer, log, normalizeString, languageTranslate
 from lat2cyr import Lat2Cyr
 
 
+REGEX_EXPRESSIONS = [ '[Ss]([0-9]+)[][._-]*[Ee]([0-9]+)([^\\\\/]*)$',
+                      '[\._ \-]([0-9]+)x([0-9]+)([^\\/]*)',                     # foo.1x09
+                      '[\._ \-]([0-9]+)([0-9][0-9])([\._ \-][^\\/]*)',          # foo.109
+                      '([0-9]+)([0-9][0-9])([\._ \-][^\\/]*)',
+                      '[\\\\/\\._ -]([0-9]+)([0-9][0-9])[^\\/]*',
+                      'Season ([0-9]+) - Episode ([0-9]+)[^\\/]*',              # Season 01 - Episode 02
+                      'Season ([0-9]+) Episode ([0-9]+)[^\\/]*',                # Season 01 Episode 02
+                      '[\\\\/\\._ -][0]*([0-9]+)x[0]*([0-9]+)[^\\/]*',
+                      '[[Ss]([0-9]+)\]_\[[Ee]([0-9]+)([^\\/]*)',                #foo_[s01]_[e01]
+                      '[\._ \-][Ss]([0-9]+)[\.\-]?[Ee]([0-9]+)([^\\/]*)',       #foo, s01e01, foo.s01.e01, foo.s01-e01
+                      's([0-9]+)ep([0-9]+)[^\\/]*',                             #foo - s01ep03, foo - s1ep03
+                      '[Ss]([0-9]+)[][ ._-]*[Ee]([0-9]+)([^\\\\/]*)$',
+                      '[\\\\/\\._ \\[\\(-]([0-9]+)x([0-9]+)([^\\\\/]*)$'
+                     ]
+
+
 def Search(item):
     osdb_server = OSDBServer()
     subtitles_list = []
@@ -45,6 +61,9 @@ def Search(item):
         # log(__name__, "Search for [%s] by name" %
         #     (os.path.basename(item['file_original_path']),))
         log(__name__, "Search for [%s] by name" % item['title'])
+        log(__name__, 'TVshow: %s' % item['tvshow'])
+        log(__name__, 'Season: %s' % item['season'])
+        log(__name__, 'Episode: %s' % item['episode'])
         subtitles_list = osdb_server.search_subtitles(item['title'],
                                                       item['tvshow'],
                                                       item['season'],
@@ -282,6 +301,12 @@ elif params['action'] == 'download':
 elif params['action'] == 'manualsearch':
     log(__name__, "action 'manualsearch' called")
     item = {}
+    item['tvshow'] = []
+    item['season'] = 0
+    item['episode'] = 0
+    item['temp'] = False
+    item['rar'] = False
+    item['mansearch'] = False
 
     if 'searchstring' in params:
         item['mansearch'] = True
@@ -299,14 +324,33 @@ elif params['action'] == 'manualsearch':
     else:
         item['year'] = ''
 
-    log(__name__, 'Naslov: %s' % item['title'])
+    log(__name__, 'Title: %s' % item['title'])
 
-    item['temp'] = False
-    item['rar'] = False
-    item['mansearch'] = False
-    item['tvshow'] = []
-    item['season'] = 0
-    item['episode'] = 0
+    i = 1
+    for regex in REGEX_EXPRESSIONS:
+        find_season = re.findall(regex, item['title'])
+        if len(find_season) > 0 :
+            log( __name__ , "Regex File Se: %s, Ep: %s," % (str(find_season[0][0]),str(find_season[0][1]),) )
+            season = find_season[0][0]
+            episode = find_season[0][1]
+            item['season'] = int(season)
+            item['episode'] = int(episode)
+            if i == 2:
+                item['tvshow'] = item['title'].replace('%sx%s' % (int(season), episode), '')
+                break
+            elif i == 3 or i == 4 or i == 5:
+                item['tvshow'] = item['title'].replace('%s%s' % (int(season), episode), '')
+                break
+            elif i == 10:
+                item['tvshow'] = item['title'].replace('S%sE%s' % (season, episode), '')
+                break
+            elif i == 11:
+                item['tvshow'] = item['title'].replace('s%sep%s' % (season, episode), '')
+                break
+            else:
+                item['tvshow'] = item['title']
+        i += 1
+
     item['3let_language'] = []  # ['scc','eng']
 
     for lang in urllib.unquote(params['languages']).decode('utf-8').split(","):
