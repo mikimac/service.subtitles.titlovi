@@ -2,7 +2,7 @@
 <addon id="service.subtitles.titlovi"
        name="Titlovi.com"
        version="1.0.7"
-       provider-name="mikimac, amet">
+       provider-name="mikimac">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
     <import addon="script.module.lat2cyr" version="0.3.2"/>
@@ -10,14 +10,13 @@
   <extension point="xbmc.subtitle.module"
              library="service.py" />
   <extension point="xbmc.addon.metadata">
-    <summary lang="en">Titlovi.com</summary>
-    <description lang="en">Search and download subtitles from Titlovi.com</description>
-    <disclaimer lang="en"></disclaimer>
-    <platform>all</platform>
+    <summary lang="en">Titlovi.com subtitle search and download</summary>
+    <language></language>
+    <description lang="en">Titlovi.com subtitle addon for gotham. Search and download subtitles from Titlovi.com search, download movies and tv series and if you wish convert serbian latin to cyrillic</description>
     <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
-    <forum></forum>
-    <website></website>
-    <email></email>
+    <platform>all</platform>
+    <website>https://github.com/mikimac/service.subtitles.titlovi</website>
     <source>https://github.com/mikimac/service.subtitles.titlovi</source>
+    <forum></forum>
   </extension>
 </addon>
