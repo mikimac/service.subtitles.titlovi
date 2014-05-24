@@ -12,7 +12,7 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="en">Titlovi.com subtitle search and download</summary>
     <language>bs hr en mk sr sl</language>
-    <description lang="en">Titlovi.com subtitle addon for gotham. Search and download subtitles from Titlovi.com search, download movies and tv series and if you wish convert serbian latin to cyrillic. Supported languages: English, Bosnian, Macedonian, Croatian, Serbian and Slovenian</description>
+    <description lang="en">Titlovi.com subtitle addon for gotham.Search and download subtitles from Titlovi.com, for movies and tv series. And if you wish, convert serbian latin to cyrillic. Supported languages: English, Bosnian, Macedonian, Croatian, Serbian and Slovenian</description>
     <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
     <platform>all</platform>
     <website>https://github.com/mikimac/service.subtitles.titlovi</website>
