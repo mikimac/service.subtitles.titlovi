@@ -1,5 +1,7 @@
-KODI addon for titlovi.com
+KODI addon for titlovi.com (work in progress)
 =========================
+
+Working to solve the problem.
 
 Titlovi.com subtitle addon for kodi.
 Search and download subtitles from Titlovi.com, for movies and tv series.
