@@ -98,7 +98,7 @@ class OSDBServer:
 
             if lang1 in supported_languages:
                 url = search_url_base % lang1
-                # log(__name__, "%s - Language %i" % (url, i))
+                log(__name__, "%s - SearchURL: %i" % (url, i))
                 temp_subs = self.openUrl(url)
                 if temp_subs:
                     if subtitles:
@@ -107,6 +107,8 @@ class OSDBServer:
                         subtitles = temp_subs
             else:
                 log(__name__, "Unsupported lang: %s" % lang1)
+
+        # log(__name__, "Subs: %s" % subtitles)
 
         try:
             if subtitles:
@@ -138,8 +140,8 @@ class OSDBServer:
                     link = url_base % subtitle['ID']
                     movie = subtitle['movie']
 
-                    log(__name__, "season: %02d" % int(season))
-                    log(__name__, "season: %s" % episode)
+                    # log(__name__, "season: %02d" % int(season))
+                    # log(__name__, "season: %s" % episode)
 
                     if tvshow:
                         if episode:
@@ -163,9 +165,9 @@ class OSDBServer:
                                                     'sync': False,
                                                     'hearing_imp': False
                                                     })
-                    log(__name__, "link: %s" % link)
-                    log(__name__, "movie: %s" % movie)
-                    log(__name__, "rating: %s" % rating)
+                    # log(__name__, "link: %s" % link)
+                    # log(__name__, "movie: %s" % movie)
+                    # log(__name__, "rating: %s" % rating)
                 return subtitles_list
         except:
             return subtitles_list
@@ -183,8 +185,9 @@ class OSDBServer:
             ime = detali[1] + " " + detali[2]
             lang = detali[4].split("/")[-1]
             lang = lang[:-5]
+            release = detali[3].decode('utf-8')
             prevodi.append({'movie': ime,
                             'ID': id,
-                            'release': detali[3],
+                            'release': release,
                             'lang_name': lang})
         return prevodi
