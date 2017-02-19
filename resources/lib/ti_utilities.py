@@ -66,16 +66,16 @@ class OSDBServer:
  
         search_string = name.replace(" ", "+")
 
-        if year:
-            search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&g=%s&sort=4" % (search_string, "%s", year)
-        # elif tvshow and season and episode and year:
-        #     search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&t=2&s=%s&e=%s&g=%s&sort=4" % (search_string, "%s", int(season), episode, year)
-        elif tvshow and season and episode:
-            search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&t=2&s=%s&e=%s&sort=4" % (search_string, "%s", int(season), episode)
-        elif tvshow and season:
-            search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&t=2&s=%s&e=0&sort=4" % (search_string, "%s", int(season))
+        if tvshow:
+            if season and episode:
+                search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&t=2&s=%s&e=%s&sort=4" % (search_string, "%s", int(season), episode)
+            elif season:
+                search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&t=2&s=%s&e=0&sort=4" % (search_string, "%s", int(season))
         else:
-            search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&sort=4" % (search_string, "%s")
+            if year:
+                search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&g=%s&sort=4" % (search_string, "%s", year)
+            else:
+                search_url_base = "http://titlovi.com/titlovi/?prijevod=%s&jezik=%s&sort=4" % (search_string, "%s")
 
         subtitles = None
         supported_languages = ["bs", "hr", "en", "mk", "sr", "sl", "rs", "ba", "si", "bosanski", "hrvatski", "cirilica", "english", "makedonski", "srpski", "slovenski", None] # kodi format
